@@ -34,26 +34,35 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
-import androidx.appcompat.widget.Toolbar;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
+
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import java.nio.ByteBuffer;
+
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
 
-public abstract class CameraActivity extends AppCompatActivity
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Locale;
+
+public abstract class CameraAudioActivity extends AppCompatActivity
     implements OnImageAvailableListener,
         Camera.PreviewCallback,
         CompoundButton.OnCheckedChangeListener,
@@ -86,10 +95,21 @@ public abstract class CameraActivity extends AppCompatActivity
   private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView;
 
+
+
+  //Button Audio Output
+  private Button button;
+
+  //Text To Speech
+  private TextToSpeech mTTS;
+
+  private HashMap<Integer, String> outputStrings;
+
+
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
     LOGGER.d("onCreate " + this);
-    super.onCreate(null);
+    super.onCreate(savedInstanceState);
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.tfe_od_activity_camera);
@@ -167,6 +187,44 @@ public abstract class CameraActivity extends AppCompatActivity
 
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
+
+
+
+    //Button for Audio Out
+    button = findViewById(R.id.button);
+
+
+
+    mTTS = new TextToSpeech(this, status -> {
+      if (status == TextToSpeech.SUCCESS){
+        int result = mTTS.setLanguage(Locale.ENGLISH);
+        if(result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED){
+          Log.e("TTS", "Language not supported");
+        }else{
+          button.setEnabled(true);
+        }
+      } else {
+        Log.e("TTS", "Initialization failed");
+      }
+    });
+
+
+
+    //OnClick go to detectorActivity and use results for Audio output method
+
+    button.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+
+        onButtonSpeak();
+
+      }
+    });
+
+
+
+
+
   }
 
   protected int[] getRgbBytes() {
@@ -375,7 +433,7 @@ public abstract class CameraActivity extends AppCompatActivity
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       if (shouldShowRequestPermissionRationale(PERMISSION_CAMERA)) {
         Toast.makeText(
-                CameraActivity.this,
+                CameraAudioActivity.this,
                 "Camera permission is required for this demo",
                 Toast.LENGTH_LONG)
             .show();
@@ -443,7 +501,7 @@ public abstract class CameraActivity extends AppCompatActivity
                 public void onPreviewSizeChosen(final Size size, final int rotation) {
                   previewHeight = size.getHeight();
                   previewWidth = size.getWidth();
-                  CameraActivity.this.onPreviewSizeChosen(size, rotation);
+                  CameraAudioActivity.this.onPreviewSizeChosen(size, rotation);
                 }
               },
               this,
@@ -547,4 +605,48 @@ public abstract class CameraActivity extends AppCompatActivity
   protected abstract void setNumThreads(int numThreads);
 
   protected abstract void setUseNNAPI(boolean isChecked);
+
+
+
+
+  //Diese Methode wird beim drücken des Audioausgabe Button aufgerufen und ihr wird der Button zum aktivieren, sowie der Ausgabetext und die float Werte für pitch und speed der Sprache übergeben
+  public void onButtonSpeak(){
+    float pitch = 1.0f;
+    float speed = 1.0f;
+
+    outputStrings = DetectorActivity.getTextForAudio();
+
+    for(int i = 1; i <= outputStrings.size(); i++){
+
+      if(outputStrings.containsKey(1)){
+        speak(outputStrings.get(1), 1.0f, 1.0f);
+      }
+
+      if(outputStrings.containsKey(2)){
+        speak(outputStrings.get(2), 0.7f, 1.0f);
+      }
+
+      if(outputStrings.containsKey(3)){
+        speak(outputStrings.get(3), 0.5f, 1.0f);
+      }
+
+    }
+
+  }
+
+  private void speak(String text, float pitch, float speed){
+
+    if(pitch < 0.1f) pitch = 0.1f;
+    if(speed < 0.1f) speed = 0.1f;
+
+    if(text == null) text = "Fehler";
+
+    mTTS.setPitch(pitch);
+    mTTS.setSpeechRate(speed);
+
+    //durch Queue_Flush wird der Text wenn neuer Text zum sprechen kommt unterbrochen und der neue wird ausgegeben. alternative wäre Queue_ADD, dabei würde der text immer angehängt
+    mTTS.speak(text, TextToSpeech.QUEUE_ADD, null);
+
+  }
+
 }

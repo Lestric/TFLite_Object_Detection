@@ -30,9 +30,7 @@ import android.os.SystemClock;
 import android.util.Size;
 import android.util.TypedValue;
 import android.widget.Toast;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.customview.OverlayView.DrawCallback;
 import org.tensorflow.lite.examples.detection.env.BorderedText;
@@ -42,11 +40,18 @@ import org.tensorflow.lite.examples.detection.tflite.Detector;
 import org.tensorflow.lite.examples.detection.tflite.TFLiteObjectDetectionAPIModel;
 import org.tensorflow.lite.examples.detection.tracking.MultiBoxTracker;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
  * objects.
  */
-public class DetectorActivity extends CameraActivity implements OnImageAvailableListener {
+public class DetectorActivity extends CameraAudioActivity implements OnImageAvailableListener {
   private static final Logger LOGGER = new Logger();
 
   // Configuration values for the prepackaged SSD model.
@@ -81,6 +86,9 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
   private MultiBoxTracker tracker;
 
   private BorderedText borderedText;
+
+  private static List<Detector.Recognition> resultsForAudio = new ArrayList<Detector.Recognition>();
+
 
   @Override
   public void onPreviewSizeChosen(final Size size, final int rotation) {
@@ -195,8 +203,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 break;
             }
 
+            //List with the Recognition results
             final List<Detector.Recognition> mappedRecognitions =
                 new ArrayList<Detector.Recognition>();
+
+            resultsForAudio.clear();
+            int i = 0;
 
             for (final Detector.Recognition result : results) {
               final RectF location = result.getLocation();
@@ -207,6 +219,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
                 result.setLocation(location);
                 mappedRecognitions.add(result);
+                resultsForAudio.add( i++, result);
               }
             }
 
@@ -275,4 +288,56 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
           }
         });
   }
+
+
+  protected static HashMap<Integer, String> getTextForAudio(){
+
+    //Bubble Sort of Recognition Results by the criteria of "Left"
+    resultsForAudio = sort((ArrayList<Detector.Recognition>) resultsForAudio);
+
+    String detectedObjectsString = " ";
+
+    for( Detector.Recognition result : resultsForAudio){
+
+      detectedObjectsString = detectedObjectsString + ", " + String.format(result.getTitle()) + ", ";
+      //System.out.println(result.getLocation().toString());
+    }
+
+    //Location of RectF for Rectangle of Bounding Box is defined in Class: TFLiteObjectDetectionAPIModel in Line 228ff.
+    //The Values are in Order: left, top, right, bottom
+
+    HashMap h = new HashMap<Integer, String>();
+    h.put(1 , detectedObjectsString);
+
+
+    return h;
+  }
+
+  public static ArrayList<Detector.Recognition> sort(ArrayList<Detector.Recognition> arrayList) {
+
+
+    /*
+    Sort Result List by the bounding box locations...
+     */
+
+    Collections.sort(arrayList, new Comparator<Detector.Recognition>() {
+      @Override
+      public int compare(Detector.Recognition o1, Detector.Recognition o2) {
+
+        if(o1.getLocation().centerY() < o2.getLocation().centerY()){
+          return 1;
+        } else {
+          if(o1.getLocation().centerY() == o2.getLocation().centerY()){
+            return 0;
+          } else{
+            return -1;
+          }
+        }
+      }
+    });
+
+    return arrayList;
+  }
+
 }
+

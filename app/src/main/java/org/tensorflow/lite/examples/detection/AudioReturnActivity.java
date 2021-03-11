@@ -14,7 +14,7 @@ public class AudioReturnActivity extends AppCompatActivity {
 
 
     //Diese Methode wird beim drücken des Audioausgabe Button aufgerufen und ihr wird der Button zum aktivieren, sowie der Ausgabetext und die float Werte für pitch und speed der Sprache übergeben
-    protected void onButtonSpeak(Button mButtonSpeak, String text, float pitch, float speed){
+    public void onButtonSpeak(Button mButtonSpeak, String text, float pitch, float speed){
         mTTS = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
