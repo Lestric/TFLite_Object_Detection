@@ -1,4 +1,22 @@
-# TensorFlow Lite Object Detection Android Demo
+# TensorFlow Lite Object Detection Android Demo extended with MiDaS Depth Estimation
+## This is a practical work of a Bachelor Thesis with the topic ~3D Object Detection with Audio Output on a mobile device by Lestric
+## The Code is based on TensorFlow Lite Object Detection Android Demo and MiDaS 
+
+Links:
+
+TensorFlow Lite Object Detection Android Demo:
+(https://github.com/tensorflow/examples/tree/master/lite/examples/object_detection/android)
+
+MiDaS:
+https://github.com/intel-isl/MiDaS
+
+MiDaS Paper Citation:
+@article{Ranftl2020,
+	author    = {Ren\'{e} Ranftl and Katrin Lasinger and David Hafner and Konrad Schindler and Vladlen Koltun},
+	title     = {Towards Robust Monocular Depth Estimation: Mixing Datasets for Zero-shot Cross-dataset Transfer},
+	journal   = {IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI)},
+	year      = {2020},
+}
 
 ### Overview
 

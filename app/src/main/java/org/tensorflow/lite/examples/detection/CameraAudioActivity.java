@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+ * This File is changes by Lestric
+ */
+
 package org.tensorflow.lite.examples.detection;
 
 import android.Manifest;
@@ -96,7 +100,7 @@ public abstract class CameraAudioActivity extends AppCompatActivity
   private TextView threadsTextView;
 
 
-
+  // New Button, Text To Speech and Hashmap by Lestric
   //Button Audio Output
   private Button button;
 
@@ -190,6 +194,7 @@ public abstract class CameraAudioActivity extends AppCompatActivity
 
 
 
+    // From here on until the ...Lestric END comment, is new Code by Lestric for the Audio Return function
     //Button for Audio Out
     button = findViewById(R.id.button);
 
@@ -222,6 +227,7 @@ public abstract class CameraAudioActivity extends AppCompatActivity
     });
 
 
+    //... Lestric END
 
 
 
@@ -609,6 +615,7 @@ public abstract class CameraAudioActivity extends AppCompatActivity
 
 
 
+  // From here on new Code by Lestric for the Audio Return function
   //Diese Methode wird beim drücken des Audioausgabe Button aufgerufen und ihr wird der Button zum aktivieren, sowie der Ausgabetext und die float Werte für pitch und speed der Sprache übergeben
   public void onButtonSpeak(){
     float pitch = 1.0f;
@@ -616,21 +623,19 @@ public abstract class CameraAudioActivity extends AppCompatActivity
 
     outputStrings = DetectorActivity.getTextForAudio();
 
-    for(int i = 1; i <= outputStrings.size(); i++){
-
-      if(outputStrings.containsKey(1)){
-        speak(outputStrings.get(1), 1.0f, 1.0f);
-      }
-
-      if(outputStrings.containsKey(2)){
-        speak(outputStrings.get(2), 0.7f, 1.0f);
-      }
-
-      if(outputStrings.containsKey(3)){
-        speak(outputStrings.get(3), 0.5f, 1.0f);
-      }
-
+    if(outputStrings.containsKey(1)){
+      speak(outputStrings.get(1), 1.0f, 1.0f);
     }
+
+    if(outputStrings.containsKey(2)){
+      speak(outputStrings.get(2), 0.7f, 1.0f);
+    }
+
+    if(outputStrings.containsKey(3)){
+      speak(outputStrings.get(3), 0.5f, 1.0f);
+    }
+
+
 
   }
 

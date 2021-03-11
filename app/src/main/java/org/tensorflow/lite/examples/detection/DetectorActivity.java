@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+ * This File is changes by Lestric
+ */
+
 package org.tensorflow.lite.examples.detection;
 
 import android.graphics.Bitmap;
@@ -289,6 +293,8 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
         });
   }
 
+
+  // From here on new Code by Lestric for the Audio Return function
 
   protected static HashMap<Integer, String> getTextForAudio(){
 
