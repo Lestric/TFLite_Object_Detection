@@ -1,4 +1,5 @@
 /*
+ * 
  * Copyright 2019 The TensorFlow Authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,10 +52,15 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+
+
 /**
  * An activity that uses a TensorFlowMultiBoxDetector and ObjectTracker to detect and then track
  * objects.
+ *
  */
+
+
 public class DetectorActivity extends CameraAudioActivity implements OnImageAvailableListener {
   private static final Logger LOGGER = new Logger();
 
@@ -92,6 +98,7 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
   private BorderedText borderedText;
 
   private static List<Detector.Recognition> resultsForAudio = new ArrayList<Detector.Recognition>();
+
 
 
   @Override
@@ -190,6 +197,7 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
           public void run() {
             LOGGER.i("Running detection on image " + currTimestamp);
             final long startTime = SystemClock.uptimeMillis();
+            //Here call for the Obj detection Model to process the Image!! ~Lestric
             final List<Detector.Recognition> results = detector.recognizeImage(croppedBitmap);
             lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
@@ -210,6 +218,7 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
             //List with the Recognition results
             final List<Detector.Recognition> mappedRecognitions =
                 new ArrayList<Detector.Recognition>();
+
 
             resultsForAudio.clear();
             int i = 0;
@@ -295,25 +304,69 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
 
 
   // From here on new Code by Lestric for the Audio Return function
+  // The results of the object detection are ordered by their position in the image.
+  // The audiooutput then uses this ordered sequnece.
 
   protected static HashMap<Integer, String> getTextForAudio(){
 
-    //Bubble Sort of Recognition Results by the criteria of "Left"
+    int objectCounter = 0;
+
+    //Depth information from google ARcore Frame... is only possible for new Android Smartphones which support the google ARcore...
+    //Image depthImage = getDepthImage();
+
+    //Bubble Sort of Recognition Results by the criteria: "From the Bottom to the Top of the Image"
     resultsForAudio = sort((ArrayList<Detector.Recognition>) resultsForAudio);
 
-    String detectedObjectsString = " ";
-
-    for( Detector.Recognition result : resultsForAudio){
-
-      detectedObjectsString = detectedObjectsString + ", " + String.format(result.getTitle()) + ", ";
-      //System.out.println(result.getLocation().toString());
-    }
 
     //Location of RectF for Rectangle of Bounding Box is defined in Class: TFLiteObjectDetectionAPIModel in Line 228ff.
     //The Values are in Order: left, top, right, bottom
+    //The point at the bottom (right) is used to estimate the distance and order the output sequence
+
+    String detectedObjectsStringDistance1 = " ";
+    String detectedObjectsStringDistance2 = " ";
+    String detectedObjectsStringDistance3 = " ";
+
+    for( Detector.Recognition result : resultsForAudio){
+
+      objectCounter++;
+
+      System.out.println(result.getTitle() + ", right:" + result.getLocation().right);
+      System.out.println(result.getTitle() + ", centerX:" + result.getLocation().centerX() + ", centerY:" + result.getLocation().centerY());
+
+
+      //Distance < 50cm
+      if(result.getLocation().right > 530) {
+        detectedObjectsStringDistance1 = detectedObjectsStringDistance1 + ". " + String.format(result.getTitle()) + ", ";
+        continue;
+      }
+
+
+      //50cm < Distance < 100cm
+      if(result.getLocation().right > 380) {
+        detectedObjectsStringDistance2 = detectedObjectsStringDistance2 + ". " + String.format(result.getTitle()) + ", ";
+        continue;
+      }
+
+      //Distance > 100cm
+      if(result.getLocation().right < 380) {
+        detectedObjectsStringDistance3 = detectedObjectsStringDistance3 + ". " + String.format(result.getTitle()) + ", ";
+        continue;
+      }
+
+
+
+    }
+
+
+
+
+    // The output strings are ordered by the estimated distances 1 (<100cm), 2(<200cm) and 3 (>200cm) and here the output strings are put into the hashmap
+    // for audio out...
 
     HashMap h = new HashMap<Integer, String>();
-    h.put(1 , detectedObjectsString);
+    h.put(1 , detectedObjectsStringDistance1);
+    h.put(2 , detectedObjectsStringDistance2);
+    h.put(3 , detectedObjectsStringDistance3);
 
 
     return h;
@@ -324,16 +377,29 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
 
     /*
     Sort Result List by the bounding box locations...
+
+    The incoming videostream must have been turned to the left to process the image or else the variables left, right, top, bottom are reversed...
+    Thats because the variable of RectF.right describes the bottom location of the detected objects in my pictures... Thats why I changed the sort criteria to "location.right"
+    I want to sort the nearer Objects before the ones more far away. So I want to have Objects which are deeper in the image (more at the bottom of the image) before the objects more at the top (probably more far away)
+
+    Anyways:
+    the variables of RectF are like that in the "real" incoming Camera Image:
+
+    RectF Variable |   real position...
+          bottom   =     left
+          top      =     right
+          right    =    bottom
+          left     =     top
      */
 
     Collections.sort(arrayList, new Comparator<Detector.Recognition>() {
       @Override
       public int compare(Detector.Recognition o1, Detector.Recognition o2) {
 
-        if(o1.getLocation().centerY() < o2.getLocation().centerY()){
+        if(o1.getLocation().right < o2.getLocation().right){
           return 1;
         } else {
-          if(o1.getLocation().centerY() == o2.getLocation().centerY()){
+          if(o1.getLocation().right == o2.getLocation().right){
             return 0;
           } else{
             return -1;
@@ -345,5 +411,33 @@ public class DetectorActivity extends CameraAudioActivity implements OnImageAvai
     return arrayList;
   }
 
-}
 
+
+  /*
+  Method to get distance Values from a depth map for a pixel at position x,y
+  Only works with google ARcore...
+  // Frame Z-Value only works for special new Android Smartphones which support the google ARcore and depth information in images
+  This would have been a great method for depth estimation but it doesnt work here.
+
+  public int getMillimetersDepth(Image depthImage, int x, int y) {
+    // The depth image has a single plane, which stores depth for each
+    // pixel as 16-bit unsigned integers.
+    Image.Plane plane = depthImage.getPlanes()[0];
+    int byteIndex = x * plane.getPixelStride() + y * plane.getRowStride();
+    ByteBuffer buffer = plane.getBuffer().order(ByteOrder.nativeOrder());
+    short depthSample = buffer.getShort(byteIndex);
+    return depthSample;
+  }
+
+
+  // Frame Z-Value only works for special new Android Smartphones which support the google ARcore and depth information in images
+  protected Image getDepthImage() {
+
+    Frame frame = new Frame(new Session(this));
+
+    return Frame.acquireCameraImage();
+  }
+
+   */
+
+}

@@ -65,4 +65,22 @@ dependencies {
     androidTestImplementation 'com.google.truth:truth:1.1.2'
     androidTestImplementation 'androidx.test:runner:1.3.0'
     androidTestImplementation 'androidx.test:rules:1.3.0'
+
+
+    //Lestric added google arcore for depth estimation but it cant be used because of compatibility issues...
+    // Otherwise with  newer hardware this library would be great for depth estimation from images (out of the Frame class)
+
+    /*
+    // ARCore (Google Play Services for AR) library.
+    implementation 'com.google.ar:core:1.23.0'
+
+    // Obj - a simple Wavefront OBJ file loader
+    // https://github.com/javagl/Obj
+    implementation 'de.javagl:obj:0.2.1'
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+
+     */
+
 }

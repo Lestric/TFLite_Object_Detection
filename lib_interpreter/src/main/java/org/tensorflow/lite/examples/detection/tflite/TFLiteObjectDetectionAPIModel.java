@@ -15,8 +15,7 @@ limitations under the License.
 
 package org.tensorflow.lite.examples.detection.tflite;
 
-import static java.lang.Math.min;
-
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
@@ -24,6 +23,10 @@ import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
 import android.util.Log;
+
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.metadata.MetadataExtractor;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,8 +40,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.support.metadata.MetadataExtractor;
+
+import static java.lang.Math.min;
 
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API: -
@@ -109,6 +112,7 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
    * @param inputSize The size of image input
    * @param isQuantized Boolean representing model is quantized or not
    */
+  @SuppressLint("LongLogTag")
   public static Detector create(
       final Context context,
       final String modelFilename,
@@ -131,7 +135,9 @@ public class TFLiteObjectDetectionAPIModel implements Detector {
       }
     }
 
+    //300
     d.inputSize = inputSize;
+
 
     try {
       Interpreter.Options options = new Interpreter.Options();
