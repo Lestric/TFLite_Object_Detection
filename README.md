@@ -1,5 +1,5 @@
 # TensorFlow Lite Object Detection Android Demo extended with MiDaS Depth Estimation
-## This is a practical work of a Bachelor Thesis with the topic ~3D Object Detection with Audio Output on a mobile device by Lestric
+## This is a practical work of a bachelor thesis with the topic ~3D Object Detection with audio output on a mobile device
 ## The Code is based on TensorFlow Lite Object Detection Android Demo and MiDaS 
 
 Links:
